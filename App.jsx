@@ -195,7 +195,7 @@ function Game() {
   } else if (!isOfficial) {
     badgeClass = 'fun-mode'
     badgeTitle = 'PLAYING FOR FUN'
-    badgeSubtitle = 'Prize limit reached'
+    badgeSubtitle = ''
   }
 
   return (
@@ -281,8 +281,8 @@ function Game() {
                         <h2>SO CLOSE!</h2>
                         {isOfficial && (
                           <p className="attempts-remaining">
-                            {MAX_OFFICIAL_ATTEMPTS - (attempts + 1) > 0
-                              ? `${MAX_OFFICIAL_ATTEMPTS - (attempts + 1)} attempts left!`
+                            {MAX_OFFICIAL_ATTEMPTS - attempts > 0
+                              ? `${MAX_OFFICIAL_ATTEMPTS - attempts} attempts left!`
                               : "That was your last official try."}
                           </p>
                         )}
