@@ -309,7 +309,9 @@ function Game() {
 
             {(gameState === GameState.RESULT || gameState === GameState.WINNER) && (
               <button className="btn btn-main btn-reset" onClick={handleTryAgain}>
-                {gameState === GameState.WINNER ? 'PLAY AGAIN' : 'TRY AGAIN'}
+                {gameState === GameState.WINNER
+                  ? 'PLAY AGAIN'
+                  : (attempts >= MAX_OFFICIAL_ATTEMPTS ? 'PLAY FOR FUN' : 'TRY AGAIN')}
               </button>
             )}
           </div>
