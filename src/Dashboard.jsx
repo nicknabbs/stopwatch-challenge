@@ -11,7 +11,7 @@ import {
     ArcElement
 } from 'chart.js'
 import { Bar, Doughnut } from 'react-chartjs-2'
-import './App.css' // Reuse styles
+import '../App.css' // Reuse styles
 
 ChartJS.register(
     CategoryScale,
