@@ -30,7 +30,8 @@ html,
 body,
 #root {
   height: 100%;
-  overflow: hidden;
+  overflow: auto;
+  /* changed from hidden to allow scrolling */
 }
 
 body {
@@ -43,7 +44,9 @@ body {
 
 .app {
   min-height: 100vh;
+  /* Fallback */
   min-height: 100dvh;
+  /* Dynamic height for mobile browsers */
   display: flex;
   flex-direction: column;
 }
