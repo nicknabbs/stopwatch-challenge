@@ -154,6 +154,26 @@ body {
   background: rgba(251, 191, 36, 0.1);
 }
 
+.prize-badge.final-attempt {
+  border-color: var(--accent-stop);
+  background: rgba(248, 113, 113, 0.1);
+}
+
+.prize-badge.final-attempt .prize-text {
+  color: var(--accent-stop);
+  animation: pulse-border 2s infinite;
+}
+
+.prize-badge.fun-mode {
+  border-color: var(--text-secondary);
+  background: rgba(160, 160, 176, 0.1);
+  border-style: dashed;
+}
+
+.prize-badge.fun-mode .prize-text {
+  color: var(--text-secondary);
+}
+
 .prize-icon {
   font-size: 3rem;
   margin-bottom: 0.5rem;
