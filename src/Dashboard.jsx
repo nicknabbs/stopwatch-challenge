@@ -80,6 +80,13 @@ export default function Dashboard() {
                 }
             })
 
+            // Recent Activity: Filter for Wins and Resets (and maybe some plays)
+            const recent = data
+                .filter(e => e.event_type === 'RESET' || e.event_type === 'GAME_STOP') // Show everything for now
+                .slice(0, 50) // Last 50 entries
+
+            setRecentEvents(recent)
+
             setStats({
                 totalGames,
                 officialWins,
