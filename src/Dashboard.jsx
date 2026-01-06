@@ -32,6 +32,7 @@ export default function Dashboard() {
         resets: 0
     })
     const [loading, setLoading] = useState(true)
+    const [recentEvents, setRecentEvents] = useState([])
 
     useEffect(() => {
         fetchStats()
@@ -150,6 +151,59 @@ export default function Dashboard() {
                                 title: { display: true, text: 'Engagement Overview' },
                             },
                         }} data={barData} />
+                    </div>
+
+                    {/* Recent Activity Log */}
+                    <div className="game-panel" style={{ flexDirection: 'column', padding: '1rem', alignItems: 'flex-start' }}>
+                        <h3 style={{ marginBottom: '1rem', color: '#fbbf24' }}>Recent Activity</h3>
+                        <div style={{ width: '100%', overflowX: 'auto' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '300px' }}>
+                                <thead>
+                                    <tr style={{ borderBottom: '1px solid #4b5563' }}>
+                                        <th style={{ padding: '0.5rem' }}>Time</th>
+                                        <th style={{ padding: '0.5rem' }}>Event</th>
+                                        <th style={{ padding: '0.5rem' }}>Details</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {recentEvents.length === 0 ? (
+                                        <tr><td colSpan="3" style={{ padding: '0.5rem', textAlign: 'center', color: '#888' }}>No recent activity</td></tr>
+                                    ) : (
+                                        recentEvents.map((evt) => (
+                                            <tr key={evt.id} style={{ borderBottom: '1px solid #333' }}>
+                                                <td style={{ padding: '0.5rem', fontSize: '0.9rem' }}>
+                                                    {new Date(evt.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                    <br />
+                                                    <span style={{ fontSize: '0.8rem', color: '#666' }}>{new Date(evt.created_at).toLocaleDateString()}</span>
+                                                </td>
+                                                <td style={{ padding: '0.5rem' }}>
+                                                    {evt.event_type === 'RESET' && (
+                                                        <span style={{ color: '#f87171', fontWeight: 'bold' }}>RESET</span>
+                                                    )}
+                                                    {evt.event_type === 'GAME_STOP' && evt.metadata?.is_win && (
+                                                        <span style={{ color: '#4ade80', fontWeight: 'bold' }}>WINNER</span>
+                                                    )}
+                                                    {evt.event_type === 'GAME_STOP' && !evt.metadata?.is_win && (
+                                                        <span style={{ color: '#888' }}>Play</span>
+                                                    )}
+                                                </td>
+                                                <td style={{ padding: '0.5rem', fontSize: '0.9rem' }}>
+                                                    {evt.event_type === 'RESET' && (
+                                                        <span style={{ color: '#fff' }}>By: {evt.metadata?.cashier || 'Unknown'}</span>
+                                                    )}
+                                                    {evt.event_type === 'GAME_STOP' && (
+                                                        <span>
+                                                            {evt.metadata?.time_ms}ms
+                                                            {evt.metadata?.is_official ? ' (Official)' : ' (Fun)'}
+                                                        </span>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
 
                     {!import.meta.env.VITE_SUPABASE_URL && (

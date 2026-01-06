@@ -10,6 +10,14 @@ const WIN_MIN_MS = 2995
 const WIN_MAX_MS = 3005
 const MAX_OFFICIAL_ATTEMPTS = 3
 
+const CASHIER_PINS = {
+  '1776': 'Summer',
+  '2791': 'Lisa',
+  '0902': 'Stephanie',
+  '8470': 'Alyssa',
+  '4746': 'Evelyn'
+}
+
 const GameState = {
   IDLE: 'idle',
   RUNNING: 'running',
@@ -26,6 +34,11 @@ function Game() {
   const [isWinner, setIsWinner] = useState(false)
   const [showConfetti, setShowConfetti] = useState(false)
   const timerRef = useRef(null)
+
+  // PIN Pad State
+  const [showPinPad, setShowPinPad] = useState(false)
+  const [pinInput, setPinInput] = useState('')
+  const [pinError, setPinError] = useState(false)
 
   // Window size for confetti
   const [windowSize, setWindowSize] = useState({
@@ -97,15 +110,56 @@ function Game() {
     setShowConfetti(false)
   }
 
-  const fullReset = () => {
-    if (window.confirm("Reset for new customer?")) {
-      logEvent(EVENT_TYPES.RESET, { total_attempts: attempts })
+  // Initial Click on "Reset for Next Customer"
+  const initiateReset = () => {
+    setShowPinPad(true)
+    setPinInput('')
+    setPinError(false)
+  }
+
+  const handlePinInput = (digit) => {
+    if (pinInput.length < 4) {
+      setPinInput(prev => prev + digit)
+      setPinError(false)
+    }
+  }
+
+  const handlePinClear = () => {
+    setPinInput('')
+    setPinError(false)
+  }
+
+  const handlePinSubmit = () => {
+    const cashierName = CASHIER_PINS[pinInput]
+
+    if (cashierName) {
+      // Success!
+      logEvent(EVENT_TYPES.RESET, {
+        total_attempts: attempts,
+        cashier: cashierName
+      })
+
+      // Perform Reset
       setGameState(GameState.IDLE)
       setTime(0)
       setAttempts(0)
       setIsWinner(false)
       setShowConfetti(false)
+
+      // Close Modal
+      setShowPinPad(false)
+      setPinInput('')
+    } else {
+      // Error
+      setPinError(true)
+      setPinInput('')
     }
+  }
+
+  const handlePinCancel = () => {
+    setShowPinPad(false)
+    setPinInput('')
+    setPinError(false)
   }
 
   const formatTime = (ms) => {
@@ -175,6 +229,7 @@ function Game() {
             {gameState === GameState.IDLE && (
               <div className="challenge-info">
                 <h2>🎯 THE CHALLENGE</h2>
+                <h3 className="prize-announcement">WIN 3 FREE GARMENTS!</h3>
                 <p>Stop exactly on <span className="target-time">3.00</span> seconds</p>
 
                 <div className={`prize-badge ${badgeClass}`}>
@@ -263,8 +318,29 @@ function Game() {
 
         <footer className="footer">
           <p>Quality dry cleaning since 2003</p>
-          <div className="admin-reset" onClick={fullReset}>Reset for Next Customer</div>
+          <div className="admin-reset" onClick={initiateReset}>Reset for Next Customer</div>
         </footer>
+
+        {/* PIN Pad Modal */}
+        {showPinPad && (
+          <div className="modal-overlay">
+            <div className="pin-modal">
+              <h3>Cashier PIN Required</h3>
+              <div className={`pin-display ${pinError ? 'error' : ''}`}>
+                {pinError ? 'INVALID PIN' : pinInput.replace(/./g, '•') || 'Enter PIN'}
+              </div>
+              <div className="pin-grid">
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
+                  <button key={num} className="btn-pin" onClick={() => handlePinInput(num.toString())}>{num}</button>
+                ))}
+                <button className="btn-pin btn-clear" onClick={handlePinClear}>C</button>
+                <button className="btn-pin" onClick={() => handlePinInput('0')}>0</button>
+                <button className="btn-pin btn-enter" onClick={handlePinSubmit}>OK</button>
+              </div>
+              <button className="btn-cancel" onClick={handlePinCancel}>Cancel</button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
