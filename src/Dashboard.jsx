@@ -118,7 +118,7 @@ export default function Dashboard() {
     }
 
     return (
-        <div className="container" style={{ overflowY: 'auto' }}>
+        <div className="container" style={{ height: '100vh', overflowY: 'scroll', WebkitOverflowScrolling: 'touch', paddingBottom: '50px' }}>
             <header className="header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h1>Analytics Dashboard</h1>
                 <button className="btn-reset" onClick={() => window.location.href = '/'}>Back to Game</button>
