@@ -8,6 +8,7 @@ import './App.css'
 // Win condition: 3.00 seconds exactly
 const WIN_MIN_MS = 2995
 const WIN_MAX_MS = 3005
+const MAX_OFFICIAL_ATTEMPTS = 3
 
 const GameState = {
   IDLE: 'idle',
@@ -60,7 +61,11 @@ function Game() {
     const finalTime = time
 
     const hitTarget = finalTime >= WIN_MIN_MS && finalTime <= WIN_MAX_MS
-    const validWin = hitTarget && attempts === 0
+
+    // Win if hit target AND within the official attempt limit (0, 1, or 2)
+    // attempts is 0-indexed, so 0, 1, 2 are the first 3 tries.
+    const isOfficialAttempt = attempts < MAX_OFFICIAL_ATTEMPTS
+    const validWin = hitTarget && isOfficialAttempt
 
     const resultState = validWin ? GameState.WINNER : GameState.RESULT
     if (validWin) {
@@ -76,8 +81,9 @@ function Game() {
     logEvent(EVENT_TYPES.GAME_STOP, {
       time_ms: finalTime,
       is_win: validWin,
-      is_official: attempts === 0,
-      hit_target: hitTarget
+      is_official: isOfficialAttempt,
+      hit_target: hitTarget,
+      attempt_index: attempts
     })
 
     // Increment attempts after the game logic
@@ -120,6 +126,24 @@ function Game() {
     setTimeout(() => logoTapCount.current = 0, 2000) // Reset if too slow
   }
 
+  // Determine current badge status
+  const attemptsLeft = MAX_OFFICIAL_ATTEMPTS - attempts
+  const isOfficial = attempts < MAX_OFFICIAL_ATTEMPTS
+
+  let badgeClass = 'official-attempt'
+  let badgeTitle = `ATTEMPT ${attempts + 1} OF ${MAX_OFFICIAL_ATTEMPTS}`
+  let badgeSubtitle = 'Prize Eligible!'
+
+  if (attempts === MAX_OFFICIAL_ATTEMPTS - 1) {
+    badgeTitle = 'FINAL ATTEMPT!'
+    badgeSubtitle = 'Last chance for prize!'
+    badgeClass = 'final-attempt' // We can style this red in CSS if needed or reuse official
+  } else if (!isOfficial) {
+    badgeClass = 'fun-mode'
+    badgeTitle = 'PLAYING FOR FUN'
+    badgeSubtitle = 'Prize limit reached'
+  }
+
   return (
     <div className="app">
       {showConfetti && (
@@ -152,18 +176,12 @@ function Game() {
               <div className="challenge-info">
                 <h2>🎯 THE CHALLENGE</h2>
                 <p>Stop exactly on <span className="target-time">3.00</span> seconds</p>
-                {attempts === 0 ? (
-                  <div className="prize-badge official-attempt">
-                    <span className="prize-icon">🏆</span>
-                    <span className="prize-text">OFFICIAL ATTEMPT</span>
-                    <span className="prize-subtext">Prize Eligible (First Try Only!)</span>
-                  </div>
-                ) : (
-                  <div className="prize-badge fun-mode">
-                    <span className="prize-text">PLAYING FOR FUN</span>
-                    <span className="prize-subtext">Prize claimed only on 1st try</span>
-                  </div>
-                )}
+
+                <div className={`prize-badge ${badgeClass}`}>
+                  <span className="prize-icon">{isOfficial ? '🏆' : '🎮'}</span>
+                  <span className="prize-text">{badgeTitle}</span>
+                  <span className="prize-subtext">{badgeSubtitle}</span>
+                </div>
               </div>
             )}
 
@@ -188,6 +206,7 @@ function Game() {
                     <div className="prize-display">
                       <h3>3 FREE PIECES!</h3>
                       <p>Show this screen to claim.</p>
+                      <p className="small-print">Won on Attempt {attempts}</p>
                     </div>
                   </div>
                 )}
@@ -199,12 +218,19 @@ function Game() {
                         <span className="result-emoji">👏</span>
                         <h2>PERFECT!</h2>
                         <p>Amazing timing!</p>
-                        <p className="small-print">(Prize only on 1st try)</p>
+                        {!isOfficial && <p className="small-print">(Prize eligible only provided on first 3 tries)</p>}
                       </>
                     ) : (
                       <>
                         <span className="result-emoji">😅</span>
                         <h2>SO CLOSE!</h2>
+                        {isOfficial && (
+                          <p className="attempts-remaining">
+                            {MAX_OFFICIAL_ATTEMPTS - (attempts + 1) > 0
+                              ? `${MAX_OFFICIAL_ATTEMPTS - (attempts + 1)} attempts left!`
+                              : "That was your last official try."}
+                          </p>
+                        )}
                       </>
                     )}
                   </div>
