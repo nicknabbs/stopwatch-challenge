@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect } from 'react'
 import Confetti from 'react-confetti'
+import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom'
+import { logEvent, EVENT_TYPES } from './src/analytics'
+import Dashboard from './src/Dashboard'
 import './App.css'
 
-// Win condition: 3.00 seconds exactly (plus/minus 0ms tolerance as requested "exactly")
-// Actually usually we want a tiny tolerance, but let's stick to 3.00 displayed
-// The previous logic was 2995 to 3005 which rounds to 3.00. We will keep that.
+// Win condition: 3.00 seconds exactly
 const WIN_MIN_MS = 2995
 const WIN_MAX_MS = 3005
 
@@ -16,7 +17,8 @@ const GameState = {
   GAME_OVER: 'game_over'
 }
 
-function App() {
+function Game() {
+  const navigate = useNavigate()
   const [gameState, setGameState] = useState(GameState.IDLE)
   const [time, setTime] = useState(0)
   const [attempts, setAttempts] = useState(0) // Tracks total attempts in this session
@@ -45,6 +47,8 @@ function App() {
   const startTimer = () => {
     setGameState(GameState.RUNNING)
     setTime(0)
+    logEvent(EVENT_TYPES.GAME_START, { attempt_number: attempts + 1 })
+
     const startTime = Date.now()
     timerRef.current = setInterval(() => {
       setTime(Date.now() - startTime)
@@ -55,38 +59,32 @@ function App() {
     clearInterval(timerRef.current)
     const finalTime = time
 
-    // Win Logic: Must be between 2.995s and 3.005s (rounds to 3.00)
-    // AND must be the first attempt (attempt 0)
     const hitTarget = finalTime >= WIN_MIN_MS && finalTime <= WIN_MAX_MS
-
-    // Valid win if they hit target AND it's their first try
-    // Note: attempts is currently 0, so this IS the first try
     const validWin = hitTarget && attempts === 0
 
+    const resultState = validWin ? GameState.WINNER : GameState.RESULT
     if (validWin) {
       setIsWinner(true)
       setShowConfetti(true)
-      setGameState(GameState.WINNER)
     } else {
-      // If they hit the target but it wasn't the first try
-      // Or if they missed the target
-      setIsWinner(false) // Even if they hit target on try 2, no prize
-
-      if (hitTarget) {
-        // Hit target on repeat try - good job but no prize
-        setGameState(GameState.RESULT)
-      } else {
-        // Missed target
-        setGameState(GameState.RESULT)
-      }
+      setIsWinner(false)
     }
+
+    setGameState(resultState)
+
+    // Log Result
+    logEvent(EVENT_TYPES.GAME_STOP, {
+      time_ms: finalTime,
+      is_win: validWin,
+      is_official: attempts === 0,
+      hit_target: hitTarget
+    })
 
     // Increment attempts after the game logic
     setAttempts(prev => prev + 1)
   }
 
   const handleTryAgain = () => {
-    // Just goes back to idle for another fun run
     setGameState(GameState.IDLE)
     setIsWinner(false)
     setTime(0)
@@ -94,18 +92,32 @@ function App() {
   }
 
   const fullReset = () => {
-    // Resets everything for a NEW CUSTOMER
-    setGameState(GameState.IDLE)
-    setTime(0)
-    setAttempts(0)
-    setIsWinner(false)
-    setShowConfetti(false)
+    if (window.confirm("Reset for new customer?")) {
+      logEvent(EVENT_TYPES.RESET, { total_attempts: attempts })
+      setGameState(GameState.IDLE)
+      setTime(0)
+      setAttempts(0)
+      setIsWinner(false)
+      setShowConfetti(false)
+    }
   }
 
   const formatTime = (ms) => {
     const seconds = Math.floor(ms / 1000)
     const centiseconds = Math.floor((ms % 1000) / 10)
     return `${seconds}.${centiseconds.toString().padStart(2, '0')}`
+  }
+
+  // Secret triple tap on logo to go to dashboard
+  const logoTapCount = useRef(0)
+  const handleLogoTap = () => {
+    logoTapCount.current += 1
+    if (logoTapCount.current >= 5) {
+      logEvent(EVENT_TYPES.VISIT_DASHBOARD)
+      navigate('/dashboard')
+      logoTapCount.current = 0
+    }
+    setTimeout(() => logoTapCount.current = 0, 2000) // Reset if too slow
   }
 
   return (
@@ -122,7 +134,7 @@ function App() {
 
       <div className="container">
         <header className="header">
-          <div className="logo" onClick={fullReset} title="Tap to reset for new customer">
+          <div className="logo" onClick={handleLogoTap} title="Tap 5 times for Dashboard">
             <span className="logo-icon">👔</span>
             <h1>REGAL CLEANERS</h1>
           </div>
@@ -131,7 +143,6 @@ function App() {
 
         {/* 
             UNIFIED GAME PANEL 
-            We keep the start/stop button area consistent to minimize finger movement
         */}
         <div className="game-panel">
 
@@ -202,11 +213,6 @@ function App() {
             )}
           </div>
 
-          {/* 
-              This is the UNIFIED BUTTON AREA 
-              The Start, Stop, and Try Again buttons will all render here 
-              so user doesn't have to move their finger.
-          */}
           <div className="control-area">
             {gameState === GameState.IDLE && (
               <button className="btn btn-main btn-start" onClick={startTimer}>
@@ -235,6 +241,17 @@ function App() {
         </footer>
       </div>
     </div>
+  )
+}
+
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<Game />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+      </Routes>
+    </Router>
   )
 }
 
