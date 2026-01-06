@@ -23,7 +23,7 @@ function App() {
   const [isWinner, setIsWinner] = useState(false)
   const [showConfetti, setShowConfetti] = useState(false)
   const timerRef = useRef(null)
-  
+
   // Window size for confetti
   const [windowSize, setWindowSize] = useState({
     width: window.innerWidth,
@@ -54,11 +54,11 @@ function App() {
   const stopTimer = () => {
     clearInterval(timerRef.current)
     const finalTime = time
-    
+
     // Win Logic: Must be between 2.995s and 3.005s (rounds to 3.00)
     // AND must be the first attempt (attempt 0)
     const hitTarget = finalTime >= WIN_MIN_MS && finalTime <= WIN_MAX_MS
-    
+
     // Valid win if they hit target AND it's their first try
     // Note: attempts is currently 0, so this IS the first try
     const validWin = hitTarget && attempts === 0
@@ -71,16 +71,16 @@ function App() {
       // If they hit the target but it wasn't the first try
       // Or if they missed the target
       setIsWinner(false) // Even if they hit target on try 2, no prize
-      
+
       if (hitTarget) {
         // Hit target on repeat try - good job but no prize
-        setGameState(GameState.RESULT) 
+        setGameState(GameState.RESULT)
       } else {
         // Missed target
         setGameState(GameState.RESULT)
       }
     }
-    
+
     // Increment attempts after the game logic
     setAttempts(prev => prev + 1)
   }
@@ -119,7 +119,7 @@ function App() {
           colors={['#FFD700', '#FF6B35', '#00D4AA', '#FF3366', '#FFFFFF']}
         />
       )}
-      
+
       <div className="container">
         <header className="header">
           <div className="logo" onClick={fullReset} title="Tap to reset for new customer">
@@ -134,7 +134,7 @@ function App() {
             We keep the start/stop button area consistent to minimize finger movement
         */}
         <div className="game-panel">
-          
+
           {/* Display Area changes based on state */}
           <div className="display-area">
             {gameState === GameState.IDLE && (
@@ -142,15 +142,15 @@ function App() {
                 <h2>🎯 THE CHALLENGE</h2>
                 <p>Stop exactly on <span className="target-time">3.00</span> seconds</p>
                 {attempts === 0 ? (
-                  <div className="prize-badge">
+                  <div className="prize-badge official-attempt">
                     <span className="prize-icon">🏆</span>
-                    <span className="prize-text">WIN 3 FREE PIECES</span>
-                    <span className="prize-subtext">Cleaned & Pressed! (First Try Only)</span>
+                    <span className="prize-text">OFFICIAL ATTEMPT</span>
+                    <span className="prize-subtext">Prize Eligible (First Try Only!)</span>
                   </div>
                 ) : (
-                  <div className="prize-badge practice-mode">
-                    <span className="prize-text">PRACTICE MODE</span>
-                    <span className="prize-subtext">Playing for fun!</span>
+                  <div className="prize-badge fun-mode">
+                    <span className="prize-text">PLAYING FOR FUN</span>
+                    <span className="prize-subtext">Prize claimed only on 1st try</span>
                   </div>
                 )}
               </div>
@@ -165,7 +165,7 @@ function App() {
 
             {(gameState === GameState.RESULT || gameState === GameState.WINNER) && (
               <div className="result-container">
-                 <div className={`result-time ${isWinner ? 'winner' : ''}`}>
+                <div className={`result-time ${isWinner ? 'winner' : ''}`}>
                   <div className="result-value">{formatTime(time)}</div>
                   <div className="result-label">seconds</div>
                 </div>
@@ -182,12 +182,12 @@ function App() {
                 )}
 
                 {gameState === GameState.RESULT && (
-                   <div className="result-message">
+                  <div className="result-message">
                     {time >= WIN_MIN_MS && time <= WIN_MAX_MS ? (
                       <>
                         <span className="result-emoji">👏</span>
                         <h2>PERFECT!</h2>
-                        <p>Amazing timing!</p> 
+                        <p>Amazing timing!</p>
                         <p className="small-print">(Prize only on 1st try)</p>
                       </>
                     ) : (
@@ -196,7 +196,7 @@ function App() {
                         <h2>SO CLOSE!</h2>
                       </>
                     )}
-                   </div>
+                  </div>
                 )}
               </div>
             )}
